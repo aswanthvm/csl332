@@ -1,121 +1,189 @@
-server:
+// ================= GO BACK N SERVER =================
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <sys/select.h>
 
 int main() {
-    int s_sock, c_sock;
-    struct sockaddr_in server;
-    socklen_t len = sizeof(struct sockaddr_in);
 
-    // 1. Setup Socket (TCP)
-    s_sock = socket(AF_INET, SOCK_STREAM, 0);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(9009);
-    server.sin_addr.s_addr = INADDR_ANY;
+    int serverSock;
+    int expected = 0;
+    int frame, ack;
 
-    bind(s_sock, (struct sockaddr *)&server, sizeof(server));
-    listen(s_sock, 5);
-    printf("Server UP - Go-Back-N Protocol\n");
+    struct sockaddr_in serverAddr,
+                       clientAddr;
+    socklen_t addrSize;
+    // Create UDP socket
+    serverSock = socket(AF_INET,
+                        SOCK_DGRAM,
+                        0);
 
-    c_sock = accept(s_sock, NULL, &len);
+    // Configure server
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(9002);
+    serverAddr.sin_addr.s_addr =
+            INADDR_ANY;
 
-    int base = 0;      // The oldest unacknowledged frame
-    int nextSeq = 0;   // The next frame to be sent
-    char msg[50], ack[50];
-    fd_set readfds;    // Set of file descriptors for select()
-    struct timeval tv; // Timer structure
+    // Bind socket
+    bind(serverSock,
+         (struct sockaddr*)&serverAddr,
+         sizeof(serverAddr));
+    // Random generator
+    srand(time(NULL));
+    printf("Go-Back-N Receiver Waiting...\n");
+    addrSize = sizeof(clientAddr);
+    // Receive frames continuously
+    while(1) {
+        // Receive frame
+        recvfrom(serverSock,
+                 &frame,
+                 sizeof(frame),
+                 0,
+                 (struct sockaddr*)&clientAddr,
+                 &addrSize);
 
-    while (base < 10) {
-        // STEP A: Send window of frames (N = 3)
-        // Send frames as long as we haven't exceeded the window size
-        while (nextSeq < base + 3 && nextSeq < 10) {
-            sprintf(msg, "Frame %d", nextSeq);
-            write(c_sock, msg, strlen(msg) + 1);
-            printf("Sent: %s\n", msg);
-            nextSeq++;
+        // Simulate frame loss
+        if(rand() % 10 < 2) {
+
+            printf("Frame %d Lost\n",
+                    frame);
+            continue;
         }
+        // Correct frame
+        if(frame == expected) {
 
-        // STEP B: Start the Timer
-        FD_ZERO(&readfds);
-        FD_SET(c_sock, &readfds);
-        tv.tv_sec = 2;   // 2 second timeout
-        tv.tv_usec = 0;
+            printf("Received Frame %d\n",
+                    frame);
 
-        // STEP C: Wait for ACK or Timeout
-        int rv = select(c_sock + 1, &readfds, NULL, NULL, &tv);
-
-        if (rv == 0) {
-            // TIMEOUT: No ACK received within 2 seconds
-            printf("Timeout! Retransmitting from frame %d\n\n", base);
-            nextSeq = base; // GO BACK: Reset nextSeq to the last un-ACKed frame
-        } 
+            expected++;
+        }
+        // Out of order frame
         else {
-            // ACK RECEIVED: Move the window forward
-            read(c_sock, ack, sizeof(ack));
-            printf("Received: %s\n\n", ack);
-            base++; // Increment base to slide the window
-        }
-    }
 
-    close(c_sock);
-    close(s_sock);
+            printf("Expected %d But Received %d\n",
+                    expected,
+                    frame);
+        }
+
+        // Send cumulative ACK
+        ack = expected - 1;
+
+        sendto(serverSock,
+               &ack,
+               sizeof(ack),
+               0,
+               (struct sockaddr*)&clientAddr,
+               addrSize);
+        printf("ACK %d Sent\n\n",
+                ack);
+    }
+    // Close socket
+    close(serverSock);
     return 0;
 }
-
 =================================================================================
-client:
+// ================= GO BACK N CLIENT =================
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 int main() {
-    int c_sock;
-    struct sockaddr_in server;
 
-    c_sock = socket(AF_INET, SOCK_STREAM, 0);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(9009);
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    int clientSock;
+    int totalFrames;
+    int windowSize;
+    int base = 0;
+    int next = 0;
+    int ack;
 
-    connect(c_sock, (struct sockaddr *)&server, sizeof(server));
-    printf("Client Active - Receiving Frames\n\n");
+    struct sockaddr_in serverAddr;
 
-    char buff[50], ack[50];
-    int expected = 0;        // The sequence number we are waiting for
-    int loss_simulated = 0;  // Flag to simulate a one-time network error
+    socklen_t addrSize;
 
-    while (expected < 10) {
-        read(c_sock, buff, sizeof(buff));
+    struct timeval tv;
 
-        // Extract the sequence number from the string "Frame X"
-        int seq = buff[strlen(buff) - 1] - '0';
+    // Input total frames
+    printf("Enter Total Frames: ");
+    scanf("%d", &totalFrames);
+    // Input window size
+    printf("Enter Window Size: ");
+    scanf("%d", &windowSize);
+    // Create UDP socket
+    clientSock = socket(AF_INET,
+                        SOCK_DGRAM,
+                        0);
+    // Configure server
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(9002);
+    serverAddr.sin_addr.s_addr =
+            inet_addr("127.0.0.1");
 
-        // STEP 1: Check if frame is out-of-order
-        if (seq != expected) {
-            printf("Discarded out-of-order frame %d\n", seq);
-            continue; // Skip sending ACK, wait for server timeout
+    addrSize = sizeof(serverAddr);
+
+    // Set timeout = 2 seconds
+    tv.tv_sec = 2;
+
+    tv.tv_usec = 0;
+
+    setsockopt(clientSock,
+               SOL_SOCKET,
+               SO_RCVTIMEO,
+               &tv,
+               sizeof(tv));
+
+    printf("\nStarting Go-Back-N Transmission...\n");
+
+    // Send frames
+    while(base < totalFrames) {
+
+        // Send frames inside window
+        while(next < base + windowSize &&
+              next < totalFrames) {
+
+            printf("Sending Frame %d\n",
+                    next);
+
+            sendto(clientSock,
+                   &next,
+                   sizeof(next),
+                   0,
+                   (struct sockaddr*)&serverAddr,
+                   addrSize);
+            next++;
         }
-
-        // STEP 2: Simulate a one-time ACK loss for Frame 8
-        if (seq == 8 && loss_simulated == 0) {
-            printf("Simulating loss of ACK for frame 8\n\n");
-            loss_simulated = 1;
-            continue; // Don't send ACK; forces Server to "Go Back"
+        // Wait for ACK
+        if(recvfrom(clientSock,
+                    &ack,
+                    sizeof(ack),
+                    0,
+                    (struct sockaddr*)&serverAddr,
+                    &addrSize) > 0) {
+            // Valid ACK received
+            if(ack >= base) {
+                printf("ACK %d Received\n",
+                        ack);
+                // Slide window
+                base = ack + 1;
+            }
         }
+        // Timeout occurs
+        else {
+            printf("\nTimeout Occurred\n");
 
-        // STEP 3: Successful Frame Receipt
-        printf("Received: %s\n", buff);
-        sprintf(ack, "ACK %d", seq);
-        write(c_sock, ack, strlen(ack) + 1);
-        printf("Sent: %s\n\n", ack);
-
-        expected++; // Increment the number we expect next
+            printf("Going Back To Frame %d\n\n",
+                    base);
+            // Retransmit from base
+            next = base;
+        }
     }
-
-    close(c_sock);
+    printf("All Frames Sent Successfully\n");
+    // Close socket
+    close(clientSock);
     return 0;
 }
