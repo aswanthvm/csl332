@@ -1,119 +1,212 @@
-server:
+// ================= SELECTIVE REPEAT SERVER =================
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
-void resend_message(int msg_num, int c_sock) {
-    char buff[60];
-    snprintf(buff, sizeof(buff), "server message: %d", msg_num);
-    printf("NACK received! Resending: %s\n", buff);
-    write(c_sock, buff, sizeof(buff));
-    usleep(1000);
-}
-
 int main() {
-    int s_sock, c_sock;
-    struct sockaddr_in server, client;
-    socklen_t addr_len = sizeof(client);
+    int serverSock;
+    int frame;
+    int expected = 0;
+    int received[100] = {0};
+    struct sockaddr_in serverAddr,
+                       clientAddr;
+    socklen_t addrSize;
 
-    s_sock = socket(AF_INET, SOCK_STREAM, 0);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(9009);
-    server.sin_addr.s_addr = INADDR_ANY;
+    // Create UDP socket
+    serverSock = socket(AF_INET,
+                        SOCK_DGRAM,
+                        0);
+    // Configure server
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(9002);
+    serverAddr.sin_addr.s_addr =
+            INADDR_ANY;
 
-    bind(s_sock, (struct sockaddr *)&server, sizeof(server));
-    listen(s_sock, 10);
-    printf("Server Up - Selective Repeat ARQ\n");
+    // Bind socket
+    bind(serverSock,
+         (struct sockaddr*)&serverAddr,
+         sizeof(serverAddr));
 
-    c_sock = accept(s_sock, (struct sockaddr *)&client, &addr_len);
+    srand(time(NULL));
+    printf("Selective Repeat Receiver Waiting...\n");
+    addrSize = sizeof(clientAddr);
+    // Receive frames continuously
+    while(1) {
+        // Receive frame
+        recvfrom(serverSock,
+                 &frame,
+                 sizeof(frame),
+                 0,
+                 (struct sockaddr*)&clientAddr,
+                 &addrSize);
 
-    int total_msgs = 9;
-    int window_size = 3;
-    int sent_msgs = 0;
-    char feedback[50];
+        // Simulate frame loss
+        if(rand() % 10 < 2) {
+            printf("Frame %d Lost\n",
+                    frame);
 
-    while (sent_msgs < total_msgs) {
-        // 1. Send the Window (3 messages)
-        for (int i = sent_msgs; i < sent_msgs + window_size && i < total_msgs; i++) {
-            char buff[50];
-            snprintf(buff, sizeof(buff), "server message: %d", i);
-            printf("Message sent to client: %s\n", buff);
-            write(c_sock, buff, sizeof(buff));
-            usleep(1000);
+            continue;
+        }
+        // New frame
+        if(received[frame] == 0) {
+
+            received[frame] = 1;
+
+            printf("Received Frame %d\n",
+                    frame);
         }
 
-        // 2. Read Feedback for each message in the window
-        for (int i = sent_msgs; i < sent_msgs + window_size && i < total_msgs; i++) {
-            bzero(feedback, sizeof(feedback));
-            read(c_sock, feedback, sizeof(feedback));
+        // Duplicate frame
+        else {
 
-            if (feedback[0] == 'n') { // If it starts with 'n' for nack
-                int nack_num = feedback[4] - '0'; // Get msg number
-                resend_message(nack_num, c_sock);
-                i--; // Decrease loop to wait for ACK of resent message
-            } else {
-                printf("Feedback: %s\n", feedback);
+            printf("Duplicate Frame %d\n",
+                    frame);
+        }
+
+        // Send ACK for that frame
+        sendto(serverSock,
+               &frame,
+               sizeof(frame),
+               0,
+               (struct sockaddr*)&clientAddr,
+               addrSize);
+
+        printf("ACK %d Sent\n",
+                frame);
+
+        // Slide receiver window
+        if(frame == expected) {
+
+            while(received[expected] == 1) {
+
+                expected++;
             }
+
+            printf("Next Expected Frame %d\n\n",
+                    expected);
         }
-        sent_msgs += window_size; // Move to next window
     }
 
-    close(c_sock);
-    close(s_sock);
+    // Close socket
+    close(serverSock);
+
     return 0;
 }
 ===========================================================================
-client:
+// ================= SELECTIVE REPEAT CLIENT =================
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <time.h>
-
-int is_faulty() {
-    int d = rand() % 4; // 0, 1, 2, or 3
-    return (d > 2);     // If 3, return true (faulty)
-}
+#include <sys/time.h>
 
 int main() {
-    srand(time(0));
-    int sockfd;
-    struct sockaddr_in server;
-    char buffer[100], response[50];
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(9009);
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    int clientSock;
+    int totalFrames;
+    int windowSize;
+    int base = 0;
+    int next = 0;
+    int ack;
 
-    connect(sockfd, (struct sockaddr *)&server, sizeof(server));
-    printf("Client with Selective Repeat\n");
+    int ackReceived[100] = {0};
 
-    int count = 0;
-    while (count < 9) {
-        bzero(buffer, sizeof(buffer));
-        read(sockfd, buffer, sizeof(buffer));
+    struct sockaddr_in serverAddr;
+    socklen_t addrSize;
+    struct timeval tv;
 
-        // Extract message number (the last character)
-        int msg_num = buffer[strlen(buffer) - 1] - '0';
-        printf("Message received: %s\n", buffer);
+    // Input total frames
+    printf("Enter Total Frames: ");
+    scanf("%d", &totalFrames);
+    // Input window size
+    printf("Enter Window Size: ");
+    scanf("%d", &windowSize);
+    // Create UDP socket
+    clientSock = socket(AF_INET,
+                        SOCK_DGRAM,
+                        0);
 
-        if (is_faulty()) {
-            snprintf(response, sizeof(response), "nack%d", msg_num);
-            printf("Negative ACK sent for message %d\n", msg_num);
-        } else {
-            snprintf(response, sizeof(response), "ack%d", msg_num);
-            printf("ACK sent for message %d\n", msg_num);
-            count++;
+    // Configure server
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(9002);
+    serverAddr.sin_addr.s_addr =
+            inet_addr("127.0.0.1");
+    addrSize = sizeof(serverAddr);
+    // Set timeout = 2 seconds
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    setsockopt(clientSock,
+               SOL_SOCKET,
+               SO_RCVTIMEO,
+               &tv,
+               sizeof(tv));
+    printf("\nStarting Selective Repeat Transmission...\n");
+    // Send frames
+    while(base < totalFrames) {
+
+        // Send frames inside window
+        while(next < base + windowSize &&
+              next < totalFrames) {
+
+            printf("Sending Frame %d\n",
+                    next);
+
+            sendto(clientSock,
+                   &next,
+                   sizeof(next),
+                   0,
+                   (struct sockaddr*)&serverAddr,
+                   addrSize);
+            next++;
         }
+        // Wait for ACK
+        if(recvfrom(clientSock,
+                    &ack,
+                    sizeof(ack),
+                    0,
+                    (struct sockaddr*)&serverAddr,
+                    &addrSize) > 0) {
 
-        write(sockfd, response, sizeof(response));
-        usleep(1000);
+            printf("ACK %d Received\n",
+                    ack);
+            // Mark ACK received
+            ackReceived[ack] = 1;
+            // Slide sender window
+            if(ack == base) {
+
+                while(ackReceived[base] == 1) {
+                    base++;
+                }
+            }
+        }
+        // Timeout occurs
+        else {
+            printf("\nTimeout Occurred\n");
+            // Retransmit only lost frames
+            for(int i = base; i < next; i++) {
+                if(ackReceived[i] == 0) {
+                    printf("Resending Frame %d\n",
+                            i);
+                    sendto(clientSock,
+                           &i,
+                           sizeof(i),
+                           0,
+                           (struct sockaddr*)&serverAddr,
+                           addrSize);
+                }
+            }
+            printf("\n");
+        }
     }
+    printf("All Frames Sent Successfully\n");
+    // Close socket
+    close(clientSock);
 
-    close(sockfd);
     return 0;
 }
