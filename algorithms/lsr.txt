@@ -1,0 +1,152 @@
+=====================================
+DIJKSTRA - LINK STATE ROUTING (LSR)
+=====================================
+
+AIM:
+-----
+To implement Dijkstra algorithm for Link State Routing.
+
+==================================================
+ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - n → Number of routers
+   - cost[][] → Cost matrix
+   - dist[] → Distance array
+   - visited[] → Visited array
+   - src → Source router
+   - min, next
+
+   These variables are used to store network
+   topology and shortest path information.
+
+3. Read number of routers.
+   scanf("%d", &n)
+   Reads total number of routers in network.
+
+4. Read cost matrix.
+
+   for(i = 0; i < n; i++)
+      for(j = 0; j < n; j++)
+         scanf("%d", &cost[i][j])
+
+   Reads connection cost between routers.
+
+5. Replace unreachable paths with infinity.
+
+   if(cost[i][j] == 0 && i != j)
+       cost[i][j] = INF
+
+   Indicates no direct connection between routers.
+
+6. Read source router.
+
+   scanf("%d", &src)
+
+   Selects starting router.
+
+7. Initialize arrays.
+
+   for(i = 0; i < n; i++)
+
+       dist[i] = cost[src][i]
+       visited[i] = 0
+
+   dist[src] = 0
+   visited[src] = 1
+
+   Initializes shortest distance and visited status.
+
+8. Repeat (n - 1) times.
+
+   for(i = 1; i < n; i++)
+
+   Calculates shortest paths for all routers.
+
+9. Find unvisited router with minimum distance.
+
+   min = INF
+
+   for(j = 0; j < n; j++)
+
+       if(visited[j] == 0 && dist[j] < min)
+
+           min = dist[j]
+           next = j
+
+   Selects nearest unvisited router.
+
+10. Mark selected router as visited.
+
+    visited[next] = 1
+
+    Prevents repeated processing.
+
+11. Update shortest distances.
+
+    for(j = 0; j < n; j++)
+
+       if(visited[j] == 0 &&
+          min + cost[next][j] < dist[j])
+
+             dist[j] = min + cost[next][j]
+
+    Updates routing table with shorter paths.
+
+12. Repeat until all routers are visited.
+
+13. Print shortest distance from source
+    to all routers.
+
+    for(i = 0; i < n; i++)
+
+        printf("%d", dist[i])
+
+    Displays minimum path cost.
+
+14. Stop
+
+==================================================
+KEY CONCEPT
+==================================================
+
+- Each router knows complete network topology.
+- Uses greedy approach.
+- Selects nearest unvisited router each time.
+- Faster than Bellman Ford algorithm.
+- Does not support negative edge weights.
+
+==================================================
+LSR vs DVR COMPARISON
+==================================================
+
+Feature         LSR                DVR
+---------------------------------------------
+Algorithm       Dijkstra           Bellman Ford
+
+Knowledge       Full Topology      Neighbor Only
+
+Speed           Faster             Slower
+
+Negative Cycle  Not Supported      Supported
+
+Routing Type    Link State         Distance Vector
+
+==================================================
+APPLICATIONS
+==================================================
+
+- Link State Routing
+- OSPF Routing Protocol
+- Computer Networks
+- Shortest Path Problems
+
+==================================================
+RESULT
+==================================================
+
+Thus the Dijkstra Link State Routing algorithm
+was successfully imple

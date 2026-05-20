@@ -1,0 +1,140 @@
+=====================================
+DISTANCE VECTOR ROUTING ALGORITHM
+=====================================
+
+AIM:
+-----
+To implement Distance Vector Routing (DVR)
+algorithm using Bellman-Ford method.
+
+==================================================
+ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - cost[][] → Cost matrix
+   - dist[][] → Distance table
+   - next_hop[][] → Next hop table
+   - nodes → Number of routers
+
+3. Read number of routers.
+
+   scanf("%d", &nodes)
+
+4. Read cost matrix.
+
+   for(i = 0; i < nodes; i++)
+      for(j = 0; j < nodes; j++)
+          scanf("%d", &cost[i][j])
+
+5. Set self-distance as zero.
+
+   if(i == j)
+      cost[i][j] = 0
+
+6. Initialize routing tables.
+
+   for(i = 0; i < nodes; i++)
+      for(j = 0; j < nodes; j++)
+
+          dist[i][j] = cost[i][j]
+          next_hop[i][j] = j
+
+   Initially direct link costs are copied
+   into distance table.
+
+7. Repeat route updation process.
+
+   do
+
+8. Set update flag.
+
+   updated = 0
+
+9. Check all routers.
+
+   for(i = 0; i < nodes; i++)
+      for(j = 0; j < nodes; j++)
+         for(k = 0; k < nodes; k++)
+
+10. Check shorter path condition.
+
+    if(dist[i][j] >
+       dist[i][k] + dist[k][j])
+
+11. Update routing cost.
+
+    dist[i][j] =
+       dist[i][k] + dist[k][j]
+
+12. Update next hop.
+
+    next_hop[i][j] =
+       next_hop[i][k]
+
+13. Set updated flag.
+
+    updated = 1
+
+14. Repeat until no change occurs.
+
+    while(updated)
+
+15. Display routing tables.
+
+    Print:
+    - Destination
+    - Cost
+    - Next Hop
+
+16. Stop
+
+==================================================
+PSEUDOCODE
+==================================================
+
+Read number of routers
+
+Read cost matrix
+
+Initialize distance and next hop tables
+
+Repeat
+
+    updated = 0
+
+    For every router i
+
+        For every destination j
+
+            For every intermediate router k
+
+                If shorter path exists
+
+                    Update distance
+
+                    Update next hop
+
+                    updated = 1
+
+Until no updates occur
+
+Display routing table
+
+==================================================
+KEY CONCEPT
+==================================================
+
+- Uses Bellman-Ford algorithm
+- Each router maintains routing table
+- Updates shortest path dynamically
+- Uses neighbor routing information
+
+==================================================
+RESULT
+==================================================
+
+Thus the Distance Vector Routing algorithm
+was successfully implemented and executed.

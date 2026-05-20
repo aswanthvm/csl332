@@ -1,0 +1,296 @@
+=====================================
+SELECTIVE REPEAT ARQ ALGORITHM
+=====================================
+
+AIM:
+-----
+To implement Selective Repeat ARQ
+protocol using UDP socket programming in C.
+
+==================================================
+SERVER (RECEIVER) ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - serverSock
+   - frame
+   - expected
+   - received[]
+   - serverAddr
+   - clientAddr
+
+3. Create UDP socket.
+
+   serverSock = socket(AF_INET,
+                       SOCK_DGRAM,
+                       0)
+
+4. Configure server address.
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(9002)
+   serverAddr.sin_addr.s_addr =
+            INADDR_ANY
+
+5. Bind socket.
+
+   bind(serverSock,
+        (struct sockaddr*)&serverAddr,
+        sizeof(serverAddr))
+
+6. Initialize expected frame.
+
+   expected = 0
+
+7. Repeat continuously.
+
+   while(1)
+
+8. Receive frame from sender.
+
+   recvfrom(serverSock,
+            &frame,
+            sizeof(frame),
+            0,
+            (struct sockaddr*)&clientAddr,
+            &addrSize)
+
+9. Simulate frame loss.
+
+   if(rand() % 10 < 2)
+
+       continue
+
+10. Check whether frame is new.
+
+    if(received[frame] == 0)
+
+11. Mark frame as received.
+
+    received[frame] = 1
+
+12. Else duplicate frame received.
+
+13. Send ACK for received frame.
+
+    sendto(serverSock,
+           &frame,
+           sizeof(frame),
+           0,
+           (struct sockaddr*)&clientAddr,
+           addrSize)
+
+14. Slide receiver window.
+
+    if(frame == expected)
+
+15. Move expected frame forward.
+
+    while(received[expected] == 1)
+
+         expected++
+
+16. Repeat process.
+
+17. Close socket.
+
+18. Stop
+
+==================================================
+CLIENT (SENDER) ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - clientSock
+   - totalFrames
+   - windowSize
+   - base
+   - next
+   - ack
+   - ackReceived[]
+   - serverAddr
+
+3. Read total number of frames.
+
+   scanf("%d", &totalFrames)
+
+4. Read window size.
+
+   scanf("%d", &windowSize)
+
+5. Create UDP socket.
+
+   clientSock = socket(AF_INET,
+                       SOCK_DGRAM,
+                       0)
+
+6. Configure server address.
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(9002)
+   serverAddr.sin_addr.s_addr =
+            inet_addr("127.0.0.1")
+
+7. Set timeout value.
+
+   tv.tv_sec = 2
+   tv.tv_usec = 0
+
+8. Apply timeout to socket.
+
+   setsockopt(clientSock,
+              SOL_SOCKET,
+              SO_RCVTIMEO,
+              &tv,
+              sizeof(tv))
+
+9. Initialize sender window.
+
+   base = 0
+   next = 0
+
+10. Repeat until all frames are sent.
+
+    while(base < totalFrames)
+
+11. Send frames inside window.
+
+    while(next < base + windowSize
+          && next < totalFrames)
+
+12. Send frame to receiver.
+
+    sendto(clientSock,
+           &next,
+           sizeof(next),
+           0,
+           (struct sockaddr*)&serverAddr,
+           addrSize)
+
+13. Increment next frame number.
+
+    next++
+
+14. Wait for ACK.
+
+    recvfrom(clientSock,
+             &ack,
+             sizeof(ack),
+             0,
+             (struct sockaddr*)&serverAddr,
+             &addrSize)
+
+15. If ACK received.
+
+    ackReceived[ack] = 1
+
+16. Slide sender window.
+
+    if(ack == base)
+
+17. Move base forward.
+
+    while(ackReceived[base] == 1)
+
+         base++
+
+18. If timeout occurs.
+
+19. Retransmit only lost frames.
+
+    for(i = base; i < next; i++)
+
+       if(ackReceived[i] == 0)
+
+           resend frame i
+
+20. Repeat process.
+
+21. Close socket.
+
+22. Stop
+
+==================================================
+PSEUDOCODE
+==================================================
+
+SERVER:
+--------
+
+Create UDP socket
+
+Bind socket
+
+Repeat forever
+
+    Receive frame
+
+    If frame lost
+
+         Ignore frame
+
+    Else
+
+         Mark frame received
+
+         Send ACK
+
+         Slide receiver window
+
+Close socket
+
+
+CLIENT:
+--------
+
+Read total frames and window size
+
+Create UDP socket
+
+Set timeout
+
+Repeat until all frames sent
+
+    Send frames inside window
+
+    Wait for ACK
+
+    Mark ACK received
+
+    Slide sender window
+
+    If timeout
+
+         Retransmit only lost frames
+
+Close socket
+
+==================================================
+KEY RULE
+==================================================
+
+If frame N is lost:
+
+Retransmit ONLY frame N
+
+Other correctly received frames
+are not retransmitted.
+
+==================================================
+ROLES
+==================================================
+
+Client  → Sender
+
+Server  → Receiver
+
+==================================================
+RESULT
+==================================================
+
+Thus the Selective Repeat ARQ protocol
+was successfully implemented and executed.

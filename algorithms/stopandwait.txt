@@ -1,0 +1,258 @@
+=====================================
+STOP AND WAIT ARQ ALGORITHM
+=====================================
+
+AIM:
+-----
+To implement Stop and Wait ARQ protocol
+using UDP socket programming in C.
+
+==================================================
+SERVER (RECEIVER) ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - serverSock
+   - frame
+   - ack
+   - expected
+   - serverAddr
+   - clientAddr
+
+3. Create UDP socket.
+
+   serverSock = socket(AF_INET,
+                       SOCK_DGRAM,
+                       0)
+
+4. Configure server address.
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(9002)
+   serverAddr.sin_addr.s_addr =
+            INADDR_ANY
+
+5. Bind socket.
+
+   bind(serverSock,
+        (struct sockaddr*)&serverAddr,
+        sizeof(serverAddr))
+
+6. Initialize expected frame.
+
+   expected = 0
+
+7. Repeat continuously.
+
+   while(1)
+
+8. Receive frame from sender.
+
+   recvfrom(serverSock,
+            &frame,
+            sizeof(frame),
+            0,
+            (struct sockaddr*)&clientAddr,
+            &addrSize)
+
+9. Simulate frame loss.
+
+   if(rand() % 10 < 2)
+
+       continue
+
+10. Check received frame.
+
+    if(frame == expected)
+
+11. Accept correct frame.
+
+    expected++
+
+12. Else duplicate frame received.
+
+13. Generate ACK.
+
+    ack = expected - 1
+
+14. Send ACK to sender.
+
+    sendto(serverSock,
+           &ack,
+           sizeof(ack),
+           0,
+           (struct sockaddr*)&clientAddr,
+           addrSize)
+
+15. Repeat process.
+
+16. Close socket.
+
+17. Stop
+
+==================================================
+CLIENT (SENDER) ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - clientSock
+   - frame
+   - ack
+   - totalFrames
+   - serverAddr
+   - timeout variables
+
+3. Read total number of frames.
+
+   scanf("%d", &totalFrames)
+
+4. Create UDP socket.
+
+   clientSock = socket(AF_INET,
+                       SOCK_DGRAM,
+                       0)
+
+5. Configure server address.
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(9002)
+   serverAddr.sin_addr.s_addr =
+            inet_addr("127.0.0.1")
+
+6. Set timeout value.
+
+   tv.tv_sec = 2
+   tv.tv_usec = 0
+
+7. Apply timeout to socket.
+
+   setsockopt(clientSock,
+              SOL_SOCKET,
+              SO_RCVTIMEO,
+              &tv,
+              sizeof(tv))
+
+8. Initialize frame number.
+
+   frame = 0
+
+9. Repeat until all frames are sent.
+
+   while(frame < totalFrames)
+
+10. Send frame to receiver.
+
+    sendto(clientSock,
+           &frame,
+           sizeof(frame),
+           0,
+           (struct sockaddr*)&serverAddr,
+           addrSize)
+
+11. Wait for ACK.
+
+    recvfrom(clientSock,
+             &ack,
+             sizeof(ack),
+             0,
+             (struct sockaddr*)&serverAddr,
+             &addrSize)
+
+12. Check ACK.
+
+    if(ack == frame)
+
+13. Move to next frame.
+
+    frame++
+
+14. Else timeout occurs.
+
+15. Resend same frame.
+
+16. Repeat process.
+
+17. Close socket.
+
+18. Stop
+
+==================================================
+PSEUDOCODE
+==================================================
+
+SERVER:
+--------
+
+Create UDP socket
+
+Bind socket
+
+Repeat forever
+
+    Receive frame
+
+    If frame lost
+
+        Ignore frame
+
+    Else
+
+        Send ACK
+
+Close socket
+
+
+CLIENT:
+--------
+
+Read total frames
+
+Create UDP socket
+
+Set timeout
+
+Repeat until all frames sent
+
+    Send frame
+
+    Wait for ACK
+
+    If ACK received
+
+         Send next frame
+
+    Else timeout
+
+         Resend same frame
+
+Close socket
+
+==================================================
+KEY RULE
+==================================================
+
+Send one frame
+       ↓
+Wait for ACK
+       ↓
+If ACK received → Send next frame
+If timeout occurs → Resend same frame
+
+==================================================
+ROLES
+==================================================
+
+Client  → Sender
+
+Server  → Receiver
+
+==================================================
+RESULT
+==================================================
+
+Thus the Stop and Wait ARQ protocol
+was successfully implemented and executed.

@@ -1,0 +1,281 @@
+=====================================
+GO BACK N ARQ ALGORITHM
+=====================================
+
+AIM:
+-----
+To implement Go Back N ARQ protocol
+using UDP socket programming in C.
+
+==================================================
+SERVER (RECEIVER) ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - serverSock
+   - frame
+   - ack
+   - expected
+   - serverAddr
+   - clientAddr
+
+3. Create UDP socket.
+
+   serverSock = socket(AF_INET,
+                       SOCK_DGRAM,
+                       0)
+
+4. Configure server address.
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(9002)
+   serverAddr.sin_addr.s_addr =
+            INADDR_ANY
+
+5. Bind socket.
+
+   bind(serverSock,
+        (struct sockaddr*)&serverAddr,
+        sizeof(serverAddr))
+
+6. Initialize expected frame.
+
+   expected = 0
+
+7. Repeat continuously.
+
+   while(1)
+
+8. Receive frame from sender.
+
+   recvfrom(serverSock,
+            &frame,
+            sizeof(frame),
+            0,
+            (struct sockaddr*)&clientAddr,
+            &addrSize)
+
+9. Simulate frame loss.
+
+   if(rand() % 10 < 2)
+
+       continue
+
+10. Check received frame.
+
+    if(frame == expected)
+
+11. Accept correct frame.
+
+    expected++
+
+12. Else discard out-of-order frame.
+
+13. Generate cumulative ACK.
+
+    ack = expected - 1
+
+14. Send ACK to sender.
+
+    sendto(serverSock,
+           &ack,
+           sizeof(ack),
+           0,
+           (struct sockaddr*)&clientAddr,
+           addrSize)
+
+15. Repeat process.
+
+16. Close socket.
+
+17. Stop
+
+==================================================
+CLIENT (SENDER) ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - clientSock
+   - totalFrames
+   - windowSize
+   - base
+   - next
+   - ack
+   - serverAddr
+
+3. Read total number of frames.
+
+   scanf("%d", &totalFrames)
+
+4. Read window size.
+
+   scanf("%d", &windowSize)
+
+5. Create UDP socket.
+
+   clientSock = socket(AF_INET,
+                       SOCK_DGRAM,
+                       0)
+
+6. Configure server address.
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(9002)
+   serverAddr.sin_addr.s_addr =
+            inet_addr("127.0.0.1")
+
+7. Set timeout value.
+
+   tv.tv_sec = 2
+   tv.tv_usec = 0
+
+8. Apply timeout to socket.
+
+   setsockopt(clientSock,
+              SOL_SOCKET,
+              SO_RCVTIMEO,
+              &tv,
+              sizeof(tv))
+
+9. Initialize sliding window.
+
+   base = 0
+   next = 0
+
+10. Repeat until all frames are sent.
+
+    while(base < totalFrames)
+
+11. Send frames inside window.
+
+    while(next < base + windowSize
+          && next < totalFrames)
+
+12. Send frame to receiver.
+
+    sendto(clientSock,
+           &next,
+           sizeof(next),
+           0,
+           (struct sockaddr*)&serverAddr,
+           addrSize)
+
+13. Increment next frame number.
+
+    next++
+
+14. Wait for ACK.
+
+    recvfrom(clientSock,
+             &ack,
+             sizeof(ack),
+             0,
+             (struct sockaddr*)&serverAddr,
+             &addrSize)
+
+15. Check ACK.
+
+    if(ack >= base)
+
+16. Slide sender window.
+
+    base = ack + 1
+
+17. Else timeout occurs.
+
+18. Retransmit all frames from base.
+
+    next = base
+
+19. Repeat process.
+
+20. Close socket.
+
+21. Stop
+
+==================================================
+PSEUDOCODE
+==================================================
+
+SERVER:
+--------
+
+Create UDP socket
+
+Bind socket
+
+Repeat forever
+
+    Receive frame
+
+    If frame lost
+
+         Ignore frame
+
+    Else if correct frame
+
+         Accept frame
+
+         Send cumulative ACK
+
+    Else
+
+         Discard frame
+
+Close socket
+
+
+CLIENT:
+--------
+
+Read total frames and window size
+
+Create UDP socket
+
+Set timeout
+
+Initialize sliding window
+
+Repeat until all frames sent
+
+    Send frames inside window
+
+    Wait for ACK
+
+    If ACK received
+
+         Slide window
+
+    Else timeout
+
+         Retransmit from base
+
+Close socket
+
+==================================================
+KEY RULE
+==================================================
+
+If frame N is lost:
+
+Retransmit frame N and all
+frames after N.
+
+==================================================
+ROLES
+==================================================
+
+Client  → Sender
+
+Server  → Receiver
+
+==================================================
+RESULT
+==================================================
+
+Thus the Go Back N ARQ protocol
+was successfully implemented and executed.

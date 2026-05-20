@@ -1,0 +1,190 @@
+=====================================
+TCP SERVER AND CLIENT ALGORITHM
+=====================================
+
+AIM:
+-----
+To establish communication between TCP client and TCP server using socket programming in C.
+
+==================================================
+TCP SERVER ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - serverSock
+   - clientSock
+   - buffer
+   - serverAddr
+
+3. Create TCP socket
+
+   Pseudocode:
+   serverSock = socket(AF_INET, SOCK_STREAM, 0)
+
+   Explanation:
+   - Creates TCP socket
+   - AF_INET → IPv4
+   - SOCK_STREAM → TCP protocol
+
+4. Configure server address
+
+   Pseudocode:
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(6265)
+   serverAddr.sin_addr.s_addr = INADDR_ANY
+
+   Explanation:
+   - Sets address family
+   - Sets port number
+   - Allows any client to connect
+
+5. Bind socket with server address
+
+   Pseudocode:
+   bind(serverSock, &serverAddr, sizeof(serverAddr))
+
+   Explanation:
+   - Associates socket with IP address and port
+
+6. Listen for client connection
+
+   Pseudocode:
+   listen(serverSock, 5)
+
+   Explanation:
+   - Waits for client connection
+   - 5 indicates maximum waiting clients
+
+7. Accept client connection
+
+   Pseudocode:
+   clientSock = accept(serverSock, NULL, NULL)
+
+   Explanation:
+   - Accepts client request
+   - Creates separate communication socket
+
+8. Receive data from client
+
+   Pseudocode:
+   recv(clientSock, buffer, sizeof(buffer), 0)
+
+   Explanation:
+   - Receives client message into buffer
+
+9. Display received message
+
+   Pseudocode:
+   print(buffer)
+
+   Explanation:
+   - Displays received client message
+
+10. Send reply to client
+
+    Pseudocode:
+    send(clientSock, buffer, strlen(buffer), 0)
+
+    Explanation:
+    - Sends response message to client
+
+11. Close sockets
+
+    Pseudocode:
+    close(clientSock)
+    close(serverSock)
+
+    Explanation:
+    - Closes all socket connections
+
+12. Stop
+
+==================================================
+TCP CLIENT ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - clientSock
+   - buffer
+   - serverAddr
+
+3. Create TCP socket
+
+   Pseudocode:
+   clientSock = socket(AF_INET, SOCK_STREAM, 0)
+
+   Explanation:
+   - Creates TCP client socket
+
+4. Configure server address
+
+   Pseudocode:
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(6265)
+   serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+   Explanation:
+   - Sets server IP address and port
+   - 127.0.0.1 represents localhost
+
+5. Connect to server
+
+   Pseudocode:
+   connect(clientSock, &serverAddr, sizeof(serverAddr))
+
+   Explanation:
+   - Establishes connection with server
+
+6. Send message to server
+
+   Pseudocode:
+   send(clientSock, buffer, strlen(buffer), 0)
+
+   Explanation:
+   - Sends message to server
+
+7. Receive response from server
+
+   Pseudocode:
+   recv(clientSock, buffer, sizeof(buffer), 0)
+
+   Explanation:
+   - Receives reply from server
+
+8. Display received message
+
+   Pseudocode:
+   print(buffer)
+
+   Explanation:
+   - Displays server reply
+
+9. Close socket
+
+   Pseudocode:
+   close(clientSock)
+
+   Explanation:
+   - Closes client connection
+
+10. Stop
+
+==================================================
+KEY FUNCTIONS
+==================================================
+
+TCP Server:
+socket() → bind() → listen() → accept() → recv() → send() → close()
+
+TCP Client:
+socket() → connect() → send() → recv() → close()
+
+==================================================
+RESULT
+==================================================
+
+Thus the TCP client-server communication program was successfully implemented and executed using socket programming in C.

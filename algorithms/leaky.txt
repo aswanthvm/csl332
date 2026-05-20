@@ -1,0 +1,90 @@
+=====================================
+LEAKY BUCKET ALGORITHM
+=====================================
+
+AIM:
+-----
+To implement Leaky Bucket algorithm for congestion control.
+
+==================================================
+ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare the variables:
+   - bucket_size
+   - outgoing_rate
+   - incoming_packet
+   - store
+   - n
+   - dropped
+
+3. Read bucket size from the user.
+
+4. Read outgoing rate from the user.
+
+5. Read number of incoming packets (n).
+
+6. Initialize store = 0.
+
+7. Repeat while n ≠ 0
+
+8. Read incoming packet size.
+
+9. Display incoming packet size.
+
+10. Check whether packet fits into bucket.
+
+    if(incoming_packet <= (bucket_size - store))
+
+11. If packet fits:
+    
+    store = store + incoming_packet
+
+    Display current buffer status.
+
+12. Else
+
+    dropped = incoming_packet - (bucket_size - store)
+
+    Display number of dropped packets.
+
+    store = bucket_size
+
+    Display current buffer status.
+
+13. Remove packets from bucket using outgoing rate.
+
+    store = store - outgoing_rate
+
+14. Check whether store becomes negative.
+
+    if(store < 0)
+
+       store = 0
+
+15. Display remaining packets in bucket.
+
+16. Decrement n.
+
+17. Repeat steps 8 to 16 until all packets are processed.
+
+18. Stop
+
+==================================================
+KEY CONCEPT
+==================================================
+
+- If incoming packets exceed bucket capacity,
+  extra packets are dropped.
+
+- Packets leave the bucket at a fixed outgoing rate.
+
+- Buffer size never becomes negative.
+
+==================================================
+RESULT
+==================================================
+
+Thus the Leaky Bucket algorithm was successfully implemented and executed successfully.

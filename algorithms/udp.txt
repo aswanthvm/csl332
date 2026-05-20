@@ -1,0 +1,193 @@
+=====================================
+UDP SERVER & CLIENT ALGORITHM
+=====================================
+
+AIM:
+-----
+To establish communication between UDP client and UDP server using socket programming in C.
+
+==================================================
+UDP SERVER ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - serverSock
+   - buffer
+   - servAddr
+   - clientAddr
+
+3. Create UDP socket
+
+   Pseudocode:
+   serverSock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+
+   Explanation:
+   - Creates UDP socket
+   - AF_INET → IPv4
+   - SOCK_DGRAM → UDP protocol
+   - IPPROTO_UDP → UDP communication
+
+4. Configure server address
+
+   Pseudocode:
+   servAddr.sin_family = AF_INET
+   servAddr.sin_port = htons(6265)
+   servAddr.sin_addr.s_addr = INADDR_ANY
+
+   Explanation:
+   - Sets address family
+   - Sets port number
+   - Allows any client to communicate
+
+5. Bind socket with server address
+
+   Pseudocode:
+   bind(serverSock, &servAddr, sizeof(servAddr))
+
+   Explanation:
+   - Associates socket with server IP and port
+
+6. Receive message from client
+
+   Pseudocode:
+   recvfrom(serverSock, buffer, sizeof(buffer), 0,
+            &clientAddr, &addrSize)
+
+   Explanation:
+   - Receives message from client
+   - Stores message in buffer
+   - Stores client address information
+
+7. Display received message
+
+   Pseudocode:
+   print(buffer)
+
+   Explanation:
+   - Displays received client message
+
+8. Send response to client
+
+   Pseudocode:
+   sendto(serverSock, buffer, strlen(buffer), 0,
+          &clientAddr, addrSize)
+
+   Explanation:
+   - Sends reply message to client
+
+9. Close socket
+
+   Pseudocode:
+   close(serverSock)
+
+   Explanation:
+   - Closes server socket
+
+10. Stop
+
+==================================================
+UDP CLIENT ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - clientSock
+   - buffer
+   - servAddr
+
+3. Create UDP socket
+
+   Pseudocode:
+   clientSock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+
+   Explanation:
+   - Creates UDP client socket
+
+4. Configure server address
+
+   Pseudocode:
+   servAddr.sin_family = AF_INET
+   servAddr.sin_port = htons(6265)
+   servAddr.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+   Explanation:
+   - Sets server IP and port
+   - 127.0.0.1 represents localhost
+
+5. Read message from user
+
+   Pseudocode:
+   fgets(buffer, sizeof(buffer), stdin)
+
+   Explanation:
+   - Reads input message from keyboard
+
+6. Send message to server
+
+   Pseudocode:
+   sendto(clientSock, buffer, strlen(buffer), 0,
+          &servAddr, sizeof(servAddr))
+
+   Explanation:
+   - Sends message to server
+
+7. Receive response from server
+
+   Pseudocode:
+   recvfrom(clientSock, buffer, sizeof(buffer), 0,
+            NULL, NULL)
+
+   Explanation:
+   - Receives reply from server
+
+8. Display received message
+
+   Pseudocode:
+   print(buffer)
+
+   Explanation:
+   - Displays server reply
+
+9. Close socket
+
+   Pseudocode:
+   close(clientSock)
+
+   Explanation:
+   - Closes client socket
+
+10. Stop
+
+==================================================
+KEY FUNCTIONS
+==================================================
+
+UDP Server:
+socket() → bind() → recvfrom() → sendto() → close()
+
+UDP Client:
+socket() → sendto() → recvfrom() → close()
+
+==================================================
+KEY DIFFERENCE BETWEEN TCP AND UDP
+==================================================
+
+TCP:
+-----
+connect() + send() / recv()
+Connection-oriented communication
+
+UDP:
+-----
+No connect()
+Uses sendto() / recvfrom()
+Connectionless communication
+
+==================================================
+RESULT
+==================================================
+
+Thus the UDP client-server communication program was successfully implemented and executed using socket programming in C.

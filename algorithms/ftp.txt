@@ -1,0 +1,293 @@
+=====================================
+FTP SERVER & CLIENT ALGORITHM
+=====================================
+
+AIM:
+-----
+To implement File Transfer Protocol (FTP)
+using socket programming in C.
+
+==================================================
+FTP SERVER ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - serverSock
+   - clientSock
+   - buffer
+   - serverAddr
+   - clientAddr
+   - file pointer (fp)
+
+   These variables are used for socket communication,
+   file handling and data transfer.
+
+3. Create TCP socket
+
+   serverSock = socket(AF_INET, SOCK_STREAM, 0)
+
+   Creates TCP socket for reliable communication.
+
+4. Configure server address
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(6265)
+   serverAddr.sin_addr.s_addr = INADDR_ANY
+
+   Sets address family, port number
+   and server IP address.
+
+5. Bind socket with server address
+
+   bind(serverSock,
+        (struct sockaddr*)&serverAddr,
+        sizeof(serverAddr))
+
+   Associates socket with server IP and port.
+
+6. Listen for client connection
+
+   listen(serverSock, 5)
+
+   Waits for incoming client requests.
+
+7. Accept client connection
+
+   clientSock = accept(serverSock,
+                        (struct sockaddr*)&clientAddr,
+                        &addrSize)
+
+   Establishes connection with client.
+
+8. Receive filename from client
+
+   recv(clientSock,
+        buffer,
+        sizeof(buffer),
+        0)
+
+   Receives requested filename from client.
+
+9. Display requested filename
+
+   printf("%s", buffer)
+
+   Shows requested file name on server.
+
+10. Open requested file
+
+    fp = fopen(buffer, "r")
+
+    Opens file in read mode.
+
+11. Check file availability
+
+    if(fp == NULL)
+
+    Checks whether file exists.
+
+12. If file not found
+
+    strcpy(buffer, "File Not Found")
+
+    send(clientSock,
+         buffer,
+         strlen(buffer),
+         0)
+
+    Sends error message to client.
+
+13. If file exists
+
+    while(fgets(buffer,
+                sizeof(buffer),
+                fp) != NULL)
+
+    Reads file line by line.
+
+14. Send file contents
+
+    send(clientSock,
+         buffer,
+         strlen(buffer),
+         0)
+
+    Sends file data to client.
+
+15. Close file
+
+    fclose(fp)
+
+    Closes opened file.
+
+16. Close sockets
+
+    close(clientSock)
+    close(serverSock)
+
+    Closes all socket connections.
+
+17. Stop
+
+==================================================
+FTP CLIENT ALGORITHM
+==================================================
+
+1. Start
+
+2. Declare variables:
+   - clientSock
+   - buffer
+   - serverAddr
+
+   These variables are used for socket
+   communication and data storage.
+
+3. Create TCP socket
+
+   clientSock = socket(AF_INET,
+                       SOCK_STREAM,
+                       0)
+
+   Creates TCP client socket.
+
+4. Configure server address
+
+   serverAddr.sin_family = AF_INET
+   serverAddr.sin_port = htons(6265)
+   serverAddr.sin_addr.s_addr =
+       inet_addr("127.0.0.1")
+
+   Sets server IP address and port number.
+
+5. Connect to server
+
+   connect(clientSock,
+           (struct sockaddr*)&serverAddr,
+           sizeof(serverAddr))
+
+   Establishes connection with server.
+
+6. Input filename
+
+   scanf("%s", buffer)
+
+   Reads filename from user.
+
+7. Send filename to server
+
+   send(clientSock,
+        buffer,
+        strlen(buffer),
+        0)
+
+   Sends requested filename to server.
+
+8. Display heading
+
+   printf("File Content")
+
+   Indicates incoming file data.
+
+9. Receive file contents
+
+   while(recv(clientSock,
+              buffer,
+              sizeof(buffer),
+              0) > 0)
+
+   Receives file data continuously.
+
+10. Display received file contents
+
+    printf("%s", buffer)
+
+    Prints received file data.
+
+11. Clear buffer
+
+    memset(buffer, 0, sizeof(buffer))
+
+    Removes old data from buffer.
+
+12. Repeat receiving until transfer completes.
+
+13. Close socket
+
+    close(clientSock)
+
+    Closes client socket.
+
+14. Stop
+
+==================================================
+PSEUDOCODE
+==================================================
+
+SERVER:
+--------
+
+Create TCP socket
+
+Bind socket
+
+Listen for client
+
+Accept client connection
+
+Receive filename
+
+Open requested file
+
+If file exists
+
+    Read file line by line
+
+    Send file contents
+
+Else
+
+    Send "File Not Found"
+
+Close file and sockets
+
+
+CLIENT:
+--------
+
+Create TCP socket
+
+Connect to server
+
+Input filename
+
+Send filename to server
+
+Receive file contents
+
+Display received data
+
+Close socket
+
+==================================================
+KEY FLOW
+==================================================
+
+Client sends filename
+          ↓
+Server opens file
+          ↓
+Server reads file contents
+          ↓
+Server sends file data
+          ↓
+Client receives and displays file
+
+==================================================
+RESULT
+==================================================
+
+Thus the FTP client-server program
+was successfully implemented and executed.

@@ -1,0 +1,283 @@
+=====================================
+SMTP SERVER & CLIENT ALGORITHM
+=====================================
+
+AIM:
+-----
+To simulate SMTP communication using socket programming in C.
+
+==================================================
+SMTP SERVER ALGORITHM
+==================================================
+
+1. Start
+
+2. Create UDP socket
+
+   sockfd = socket(AF_INET, SOCK_DGRAM, 0)
+
+   Creates UDP socket for communication.
+
+3. Set server address
+
+   server.sin_family = AF_INET
+   server.sin_port = htons(port)
+   server.sin_addr.s_addr = INADDR_ANY
+
+   Sets address family, port number and server IP.
+
+4. Bind socket with server address
+
+   bind(sockfd, &server, sizeof(server))
+
+   Associates socket with server address.
+
+5. Receive "HI" message from client
+
+   recvfrom(sockfd, buffer, sizeof(buffer), 0,
+            &client, &len)
+
+   Receives initial connection message from client.
+
+6. Send greeting message
+
+   sendto(sockfd, "220 Service Ready", 17, 0,
+          &client, len)
+
+   Sends SMTP greeting response.
+
+7. Receive "HELO" command
+
+   recvfrom(sockfd, buffer, sizeof(buffer), 0,
+            &client, &len)
+
+   Receives HELO command from client.
+
+8. Send response "250 OK"
+
+   sendto(sockfd, "250 OK", 6, 0,
+          &client, len)
+
+   Confirms HELO command.
+
+9. Receive "MAIL FROM" command
+
+   recvfrom(sockfd, buffer, sizeof(buffer), 0,
+            &client, &len)
+
+   Receives sender email address.
+
+10. Send response "250 OK"
+
+    sendto(sockfd, "250 OK", 6, 0,
+           &client, len)
+
+    Acknowledges sender address.
+
+11. Receive "RCPT TO" command
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &client, &len)
+
+    Receives receiver email address.
+
+12. Send response "250 OK"
+
+    sendto(sockfd, "250 OK", 6, 0,
+           &client, len)
+
+    Acknowledges receiver address.
+
+13. Receive "DATA" command
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &client, &len)
+
+    Receives DATA request from client.
+
+14. Send response "354 Start Mail Input"
+
+    sendto(sockfd, "354 Start Mail Input", 22, 0,
+           &client, len)
+
+    Allows client to send mail body.
+
+15. Receive mail body
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &client, &len)
+
+    Receives email content from client.
+
+16. Receive "QUIT" command
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &client, &len)
+
+    Receives termination request.
+
+17. Send closing response
+
+    sendto(sockfd, "221 Service Closed", 18, 0,
+           &client, len)
+
+    Ends SMTP session.
+
+18. Close socket
+
+    close(sockfd)
+
+    Closes server socket.
+
+19. Stop
+
+==================================================
+SMTP CLIENT ALGORITHM
+==================================================
+
+1. Start
+
+2. Create UDP socket
+
+   sockfd = socket(AF_INET, SOCK_DGRAM, 0)
+
+   Creates UDP client socket.
+
+3. Set server address
+
+   server.sin_family = AF_INET
+   server.sin_port = htons(port)
+   server.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+   Sets server IP address and port number.
+
+4. Send "HI" message
+
+   sendto(sockfd, "HI", 2, 0,
+          &server, len)
+
+   Starts communication with server.
+
+5. Receive greeting message
+
+   recvfrom(sockfd, buffer, sizeof(buffer), 0,
+            &server, &len)
+
+   Receives SMTP greeting response.
+
+6. Send "HELO" command
+
+   sendto(sockfd, "HELO", 4, 0,
+          &server, len)
+
+   Introduces client to server.
+
+7. Receive response
+
+   recvfrom(sockfd, buffer, sizeof(buffer), 0,
+            &server, &len)
+
+   Receives acknowledgment from server.
+
+8. Send "MAIL FROM" command
+
+   sendto(sockfd, "MAIL FROM", 10, 0,
+          &server, len)
+
+   Sends sender email address.
+
+9. Receive response
+
+   recvfrom(sockfd, buffer, sizeof(buffer), 0,
+            &server, &len)
+
+   Receives confirmation from server.
+
+10. Send "RCPT TO" command
+
+    sendto(sockfd, "RCPT TO", 7, 0,
+           &server, len)
+
+    Sends receiver email address.
+
+11. Receive response
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &server, &len)
+
+    Receives acknowledgment from server.
+
+12. Send "DATA" command
+
+    sendto(sockfd, "DATA", 4, 0,
+           &server, len)
+
+    Requests permission to send mail body.
+
+13. Receive response
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &server, &len)
+
+    Receives permission from server.
+
+14. Send mail body
+
+    sendto(sockfd, message, strlen(message), 0,
+           &server, len)
+
+    Sends email content to server.
+
+15. Send "QUIT" command
+
+    sendto(sockfd, "QUIT", 4, 0,
+           &server, len)
+
+    Terminates SMTP session.
+
+16. Receive closing response
+
+    recvfrom(sockfd, buffer, sizeof(buffer), 0,
+             &server, &len)
+
+    Receives goodbye message.
+
+17. Close socket
+
+    close(sockfd)
+
+    Closes client socket.
+
+18. Stop
+
+==================================================
+SMTP COMMAND FLOW
+==================================================
+
+Client                    Server
+
+HI --------------------->
+
+<------------------ 220 Service Ready
+
+HELO ------------------->
+
+<------------------------ 250 OK
+
+MAIL FROM -------------->
+
+<------------------------ 250 OK
+
+RCPT TO ---------------->
+
+<------------------------ 250 OK
+
+DATA ------------------->
+
+<--------------- 354 Start Mail Input
+
+Mail Body -------------->
+
+QUIT ------------------->
+
+<--------------- 221 Service Closed
